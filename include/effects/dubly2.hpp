@@ -2,10 +2,9 @@
 #include "effect.hpp"
 #include <cstdlib>
 
-namespace airwindohhs::dubly2
-{
+namespace airwindohhs::dubly2 {
 
-constexpr std::string_view k_name{"Dubly2"};
+constexpr std::string_view k_name{ "Dubly2" };
 constexpr std::string_view k_short_description{
     "Dubly2 is a key part of seventies sonics!"
 };
@@ -26,250 +25,308 @@ class Dubly2 final : public Effect<T>
     float E;
     float F;
     float G;
-	double iirEncL;
-	double iirDecL;
-	double iirEncR;
-	double iirDecR;
-	uint32_t fpdL;
-	uint32_t fpdR;
-	//default stuff
+    double iirEncL;
+    double iirDecL;
+    double iirEncR;
+    double iirDecR;
+    uint32_t fpdL;
+    uint32_t fpdR;
+    // default stuff
 
-
-public:
+  public:
     Dubly2()
     {
-        	A = 0.5;
-	B = 0.5;
-	C = 0.0;
-	D = 0.5;
-	E = 0.5;
-	F = 0.0;
-	G = 1.0;
-	iirEncL = 0.0; iirDecL = 0.0;
-	iirEncR = 0.0; iirDecR = 0.0;
-	fpdL = 1.0; while (fpdL < 16386) fpdL = rand()*UINT32_MAX;
-	fpdR = 1.0; while (fpdR < 16386) fpdR = rand()*UINT32_MAX;
-	//this is reset: values being initialized only once. Startup values, whatever they are.
-
+        A = 0.5;
+        B = 0.5;
+        C = 0.0;
+        D = 0.5;
+        E = 0.5;
+        F = 0.0;
+        G = 1.0;
+        iirEncL = 0.0;
+        iirDecL = 0.0;
+        iirEncR = 0.0;
+        iirDecR = 0.0;
+        fpdL = 1.0;
+        while (fpdL < 16386) {
+            fpdL = rand() * UINT32_MAX;
+        }
+        fpdR = 1.0;
+        while (fpdR < 16386) {
+            fpdR = rand() * UINT32_MAX;
+        }
+        // this is reset: values being initialized only once. Startup values, whatever they are.
     }
 
     enum params
     {
         kParamA = 0,
-kParamB = 1,
-kParamC = 2,
-kParamD = 3,
-kParamE = 4,
-kParamF = 5,
-kParamG = 6,
-kNumParameters = 7
+        kParamB = 1,
+        kParamC = 2,
+        kParamD = 3,
+        kParamE = 4,
+        kParamF = 5,
+        kParamG = 6,
+        kNumParameters = 7
     };
 
     void set_parameter_value(int index, float value)
     {
         switch (static_cast<params>(index))
         {
-        case kParamA: A = value; break;
-case kParamB: B = value; break;
-case kParamC: C = value; break;
-case kParamD: D = value; break;
-case kParamE: E = value; break;
-case kParamF: F = value; break;
-case kParamG: G = value; break;
+            case kParamA: A = value; break;
+            case kParamB: B = value; break;
+            case kParamC: C = value; break;
+            case kParamD: D = value; break;
+            case kParamE: E = value; break;
+            case kParamF: F = value; break;
+            case kParamG: G = value; break;
 
-        default: break;
+            default: break;
         }
     }
 
     float get_parameter_value(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return A; break;
-case kParamB: return B; break;
-case kParamC: return C; break;
-case kParamD: return D; break;
-case kParamE: return E; break;
-case kParamF: return F; break;
-case kParamG: return G; break;
+            case kParamA: return A; break;
+            case kParamB: return B; break;
+            case kParamC: return C; break;
+            case kParamD: return D; break;
+            case kParamE: return E; break;
+            case kParamF: return F; break;
+            case kParamG: return G; break;
 
-        default: break;
+            default: break;
         }
         return 0.0;
     }
 
     T get_parameter_default(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return 0.5; break;
-case kParamB: return 0.5; break;
-case kParamC: return 0.0; break;
-case kParamD: return 0.5; break;
-case kParamE: return 0.5; break;
-case kParamF: return 0.0; break;
-case kParamG: return 1.0; break;
+            case kParamA: return 0.5; break;
+            case kParamB: return 0.5; break;
+            case kParamC: return 0.0; break;
+            case kParamD: return 0.5; break;
+            case kParamE: return 0.5; break;
+            case kParamF: return 0.0; break;
+            case kParamG: return 1.0; break;
 
-        default: break;
+            default: break;
         }
         return 0.0;
     }
 
     constexpr std::string_view get_parameter_name(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return "encamnt"; break;
-case kParamB: return "encfreq"; break;
-case kParamC: return "tapedrv"; break;
-case kParamD: return "decamnt"; break;
-case kParamE: return "decfreq"; break;
-case kParamF: return "out pad"; break;
-case kParamG: return "dry/wet"; break;
+            case kParamA: return "encamnt"; break;
+            case kParamB: return "encfreq"; break;
+            case kParamC: return "tapedrv"; break;
+            case kParamD: return "decamnt"; break;
+            case kParamE: return "decfreq"; break;
+            case kParamF: return "out pad"; break;
+            case kParamG: return "dry/wet"; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     constexpr std::string_view get_parameter_title(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return "EncAmnt"; break;
-case kParamB: return "EncFreq"; break;
-case kParamC: return "TapeDrv"; break;
-case kParamD: return "DecAmnt"; break;
-case kParamE: return "DecFreq"; break;
-case kParamF: return "Out Pad"; break;
-case kParamG: return "Dry/Wet"; break;
+            case kParamA: return "EncAmnt"; break;
+            case kParamB: return "EncFreq"; break;
+            case kParamC: return "TapeDrv"; break;
+            case kParamD: return "DecAmnt"; break;
+            case kParamE: return "DecFreq"; break;
+            case kParamF: return "Out Pad"; break;
+            case kParamG: return "Dry/Wet"; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     std::string get_parameter_display(int index) const
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return std::to_string(A); break;
-case kParamB: return std::to_string(B); break;
-case kParamC: return std::to_string(C); break;
-case kParamD: return std::to_string(D); break;
-case kParamE: return std::to_string(E); break;
-case kParamF: return std::to_string(F); break;
-case kParamG: return std::to_string(G); break;
+            case kParamA: return std::to_string(A); break;
+            case kParamB: return std::to_string(B); break;
+            case kParamC: return std::to_string(C); break;
+            case kParamD: return std::to_string(D); break;
+            case kParamE: return std::to_string(E); break;
+            case kParamF: return std::to_string(F); break;
+            case kParamG: return std::to_string(G); break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     constexpr std::string_view get_parameter_label(int index) const
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return ""; break;
-case kParamB: return ""; break;
-case kParamC: return ""; break;
-case kParamD: return ""; break;
-case kParamE: return ""; break;
-case kParamF: return ""; break;
-case kParamG: return ""; break;
+            case kParamA: return ""; break;
+            case kParamB: return ""; break;
+            case kParamC: return ""; break;
+            case kParamD: return ""; break;
+            case kParamE: return ""; break;
+            case kParamF: return ""; break;
+            case kParamG: return ""; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     void process(T** inputs, T** outputs, long sampleFrames)
     {
-        T *in1 = inputs[0];
-        T *in2 = inputs[1];
-        T *out1 = outputs[0];
-        T *out2 = outputs[1];
+        T* in1 = inputs[0];
+        T* in2 = inputs[1];
+        T* out1 = outputs[0];
+        T* out2 = outputs[1];
 
-        	double overallscale = 1.0;
-	overallscale /= 44100.0;
-	overallscale *= Effect<T>::getSampleRate();
-	double dublyAmount = pow(A,3)*0.25;
-	double iirEncFreq = B/overallscale;
-	double tapeDrv = (C*2.0)+1.0;
-	double outlyAmount = pow(D,3)*0.25;
-	double iirDecFreq = E/overallscale;
-	double outPad = (F*2.0)+1.0;
-	if (tapeDrv > 1.0) outPad += 0.005;
-	double wet = G;
-    while (--sampleFrames >= 0)
-    {
-		double inputSampleL = *in1;
-		double inputSampleR = *in2;
-		if (fabs(inputSampleL)<1.18e-23) inputSampleL = fpdL * 1.18e-17;
-		if (fabs(inputSampleR)<1.18e-23) inputSampleR = fpdR * 1.18e-17;
-		double drySampleL = inputSampleL;
-		double drySampleR = inputSampleR;
-		iirEncL = (iirEncL * (1.0 - iirEncFreq)) + (inputSampleL * iirEncFreq);
-		iirEncR = (iirEncR * (1.0 - iirEncFreq)) + (inputSampleR * iirEncFreq);
-		double doubly = inputSampleL - iirEncL;
-		if (doubly > 1.0) doubly = 1.0; if (doubly < -1.0) doubly = -1.0;
-		if (doubly > 0) doubly = log(1.0+(255*fabs(doubly)))/2.40823996531;
-		if (doubly < 0) doubly = -log(1.0+(255*fabs(doubly)))/2.40823996531;
-		inputSampleL += doubly*dublyAmount;
-		doubly = inputSampleR - iirEncR;
-		if (doubly > 1.0) doubly = 1.0; if (doubly < -1.0) doubly = -1.0;
-		if (doubly > 0) doubly = log(1.0+(255*fabs(doubly)))/2.40823996531;
-		if (doubly < 0) doubly = -log(1.0+(255*fabs(doubly)))/2.40823996531;
-		inputSampleR += doubly*dublyAmount;
-		//end Dubly encode
-		if (tapeDrv > 1.0) {
-			inputSampleL *= tapeDrv;
-			inputSampleR *= tapeDrv;
-		}
-		if (inputSampleL > 1.57079633) inputSampleL = 1.57079633;
-		if (inputSampleL < -1.57079633) inputSampleL = -1.57079633;
-		inputSampleL = sin(inputSampleL);
-		if (inputSampleR > 1.57079633) inputSampleR = 1.57079633;
-		if (inputSampleR < -1.57079633) inputSampleR = -1.57079633;
-		inputSampleR = sin(inputSampleR);
-		if (outPad > 1.0) {
-			inputSampleL /= outPad;
-			inputSampleR /= outPad;
-		}
-		iirDecL = (iirDecL * (1.0 - iirDecFreq)) + (inputSampleL * iirDecFreq);
-		iirDecR = (iirDecR * (1.0 - iirDecFreq)) + (inputSampleR * iirDecFreq);
-		doubly = inputSampleL - iirDecL;
-		if (doubly > 1.0) doubly = 1.0; if (doubly < -1.0) doubly = -1.0;
-		if (doubly > 0) doubly = log(1.0+(255*fabs(doubly)))/2.40823996531;
-		if (doubly < 0) doubly = -log(1.0+(255*fabs(doubly)))/2.40823996531;
-		inputSampleL -= doubly*outlyAmount;
-		doubly = inputSampleR - iirDecR;
-		if (doubly > 1.0) doubly = 1.0; if (doubly < -1.0) doubly = -1.0;
-		if (doubly > 0) doubly = log(1.0+(255*fabs(doubly)))/2.40823996531;
-		if (doubly < 0) doubly = -log(1.0+(255*fabs(doubly)))/2.40823996531;
-		inputSampleR -= doubly*outlyAmount;
-		//end Dubly decode
-		if (wet !=1.0) {
-			inputSampleL = (inputSampleL * wet) + (drySampleL * (1.0-wet));
-			inputSampleR = (inputSampleR * wet) + (drySampleR * (1.0-wet));
-		}
-		//begin 64 bit stereo floating point dither
-		//int expon; frexp((double)inputSampleL, &expon);
-		fpdL ^= fpdL << 13; fpdL ^= fpdL >> 17; fpdL ^= fpdL << 5;
-		//inputSampleL += ((double(fpdL)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
-		//frexp((double)inputSampleR, &expon);
-		fpdR ^= fpdR << 13; fpdR ^= fpdR >> 17; fpdR ^= fpdR << 5;
-		//inputSampleR += ((double(fpdR)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
-		//end 64 bit stereo floating point dither
-		*out1 = inputSampleL;
-		*out2 = inputSampleR;
-		in1++;
-		in2++;
-		out1++;
-		out2++;
+        double overallscale = 1.0;
+        overallscale /= 44100.0;
+        overallscale *= Effect<T>::getSampleRate();
+        double dublyAmount = pow(A, 3) * 0.25;
+        double iirEncFreq = B / overallscale;
+        double tapeDrv = (C * 2.0) + 1.0;
+        double outlyAmount = pow(D, 3) * 0.25;
+        double iirDecFreq = E / overallscale;
+        double outPad = (F * 2.0) + 1.0;
+        if (tapeDrv > 1.0) {
+            outPad += 0.005;
+        }
+        double wet = G;
+        while (--sampleFrames >= 0)
+        {
+            double inputSampleL = *in1;
+            double inputSampleR = *in2;
+            if (fabs(inputSampleL) < 1.18e-23) {
+                inputSampleL = fpdL * 1.18e-17;
+            }
+            if (fabs(inputSampleR) < 1.18e-23) {
+                inputSampleR = fpdR * 1.18e-17;
+            }
+            double drySampleL = inputSampleL;
+            double drySampleR = inputSampleR;
+            iirEncL = (iirEncL * (1.0 - iirEncFreq)) + (inputSampleL * iirEncFreq);
+            iirEncR = (iirEncR * (1.0 - iirEncFreq)) + (inputSampleR * iirEncFreq);
+            double doubly = inputSampleL - iirEncL;
+            if (doubly > 1.0) {
+                doubly = 1.0;
+            }
+            if (doubly < -1.0) {
+                doubly = -1.0;
+            }
+            if (doubly > 0) {
+                doubly = log(1.0 + (255 * fabs(doubly))) / 2.40823996531;
+            }
+            if (doubly < 0) {
+                doubly = -log(1.0 + (255 * fabs(doubly))) / 2.40823996531;
+            }
+            inputSampleL += doubly * dublyAmount;
+            doubly = inputSampleR - iirEncR;
+            if (doubly > 1.0) {
+                doubly = 1.0;
+            }
+            if (doubly < -1.0) {
+                doubly = -1.0;
+            }
+            if (doubly > 0) {
+                doubly = log(1.0 + (255 * fabs(doubly))) / 2.40823996531;
+            }
+            if (doubly < 0) {
+                doubly = -log(1.0 + (255 * fabs(doubly))) / 2.40823996531;
+            }
+            inputSampleR += doubly * dublyAmount;
+            // end Dubly encode
+            if (tapeDrv > 1.0) {
+                inputSampleL *= tapeDrv;
+                inputSampleR *= tapeDrv;
+            }
+            if (inputSampleL > 1.57079633) {
+                inputSampleL = 1.57079633;
+            }
+            if (inputSampleL < -1.57079633) {
+                inputSampleL = -1.57079633;
+            }
+            inputSampleL = sin(inputSampleL);
+            if (inputSampleR > 1.57079633) {
+                inputSampleR = 1.57079633;
+            }
+            if (inputSampleR < -1.57079633) {
+                inputSampleR = -1.57079633;
+            }
+            inputSampleR = sin(inputSampleR);
+            if (outPad > 1.0) {
+                inputSampleL /= outPad;
+                inputSampleR /= outPad;
+            }
+            iirDecL = (iirDecL * (1.0 - iirDecFreq)) + (inputSampleL * iirDecFreq);
+            iirDecR = (iirDecR * (1.0 - iirDecFreq)) + (inputSampleR * iirDecFreq);
+            doubly = inputSampleL - iirDecL;
+            if (doubly > 1.0) {
+                doubly = 1.0;
+            }
+            if (doubly < -1.0) {
+                doubly = -1.0;
+            }
+            if (doubly > 0) {
+                doubly = log(1.0 + (255 * fabs(doubly))) / 2.40823996531;
+            }
+            if (doubly < 0) {
+                doubly = -log(1.0 + (255 * fabs(doubly))) / 2.40823996531;
+            }
+            inputSampleL -= doubly * outlyAmount;
+            doubly = inputSampleR - iirDecR;
+            if (doubly > 1.0) {
+                doubly = 1.0;
+            }
+            if (doubly < -1.0) {
+                doubly = -1.0;
+            }
+            if (doubly > 0) {
+                doubly = log(1.0 + (255 * fabs(doubly))) / 2.40823996531;
+            }
+            if (doubly < 0) {
+                doubly = -log(1.0 + (255 * fabs(doubly))) / 2.40823996531;
+            }
+            inputSampleR -= doubly * outlyAmount;
+            // end Dubly decode
+            if (wet != 1.0) {
+                inputSampleL = (inputSampleL * wet) + (drySampleL * (1.0 - wet));
+                inputSampleR = (inputSampleR * wet) + (drySampleR * (1.0 - wet));
+            }
+            // begin 64 bit stereo floating point dither
+            // int expon; frexp((double)inputSampleL, &expon);
+            fpdL ^= fpdL << 13;
+            fpdL ^= fpdL >> 17;
+            fpdL ^= fpdL << 5;
+            // inputSampleL += ((double(fpdL)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
+            // frexp((double)inputSampleR, &expon);
+            fpdR ^= fpdR << 13;
+            fpdR ^= fpdR >> 17;
+            fpdR ^= fpdR << 5;
+            // inputSampleR += ((double(fpdR)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
+            // end 64 bit stereo floating point dither
+            *out1 = inputSampleL;
+            *out2 = inputSampleR;
+            in1++;
+            in2++;
+            out1++;
+            out2++;
+        }
     }
-
-    }
-
 };
 } // namespace airwindohhs::dubly2

@@ -2,10 +2,9 @@
 #include "effect.hpp"
 #include <cstdlib>
 
-namespace airwindohhs::hypersoft
-{
+namespace airwindohhs::hypersoft {
 
-constexpr std::string_view k_name{"Hypersoft"};
+constexpr std::string_view k_name{ "Hypersoft" };
 constexpr std::string_view k_short_description{
     "Hypersoft is a more extreme form of soft-clipper."
 };
@@ -23,187 +22,209 @@ class Hypersoft final : public Effect<T>
     float B;
     float C;
     float D;
-	double lastSampleL;
-	double lastSampleR;
-	uint32_t fpdL;
-	uint32_t fpdR;
-	//default stuff
+    double lastSampleL;
+    double lastSampleR;
+    uint32_t fpdL;
+    uint32_t fpdR;
+    // default stuff
 
-
-public:
+  public:
     Hypersoft()
     {
-        	A = 0.5;
-	B = 0.5;
-	C = 0.5;
-	D = 0.5;
-	lastSampleL = 0.0;
-	lastSampleR = 0.0;
-	fpdL = 1.0; while (fpdL < 16386) fpdL = rand()*UINT32_MAX;
-	fpdR = 1.0; while (fpdR < 16386) fpdR = rand()*UINT32_MAX;
-	//this is reset: values being initialized only once. Startup values, whatever they are.
-
+        A = 0.5;
+        B = 0.5;
+        C = 0.5;
+        D = 0.5;
+        lastSampleL = 0.0;
+        lastSampleR = 0.0;
+        fpdL = 1.0;
+        while (fpdL < 16386) {
+            fpdL = rand() * UINT32_MAX;
+        }
+        fpdR = 1.0;
+        while (fpdR < 16386) {
+            fpdR = rand() * UINT32_MAX;
+        }
+        // this is reset: values being initialized only once. Startup values, whatever they are.
     }
 
     enum params
     {
         kParamA = 0,
-kParamB = 1,
-kParamC = 2,
-kParamD = 3,
-kNumParameters = 4
+        kParamB = 1,
+        kParamC = 2,
+        kParamD = 3,
+        kNumParameters = 4
     };
 
     void set_parameter_value(int index, float value)
     {
         switch (static_cast<params>(index))
         {
-        case kParamA: A = value; break;
-case kParamB: B = value; break;
-case kParamC: C = value; break;
-case kParamD: D = value; break;
+            case kParamA: A = value; break;
+            case kParamB: B = value; break;
+            case kParamC: C = value; break;
+            case kParamD: D = value; break;
 
-        default: break;
+            default: break;
         }
     }
 
     float get_parameter_value(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return A; break;
-case kParamB: return B; break;
-case kParamC: return C; break;
-case kParamD: return D; break;
+            case kParamA: return A; break;
+            case kParamB: return B; break;
+            case kParamC: return C; break;
+            case kParamD: return D; break;
 
-        default: break;
+            default: break;
         }
         return 0.0;
     }
 
     T get_parameter_default(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return 0.5; break;
-case kParamB: return 0.5; break;
-case kParamC: return 0.5; break;
-case kParamD: return 0.5; break;
+            case kParamA: return 0.5; break;
+            case kParamB: return 0.5; break;
+            case kParamC: return 0.5; break;
+            case kParamD: return 0.5; break;
 
-        default: break;
+            default: break;
         }
         return 0.0;
     }
 
     constexpr std::string_view get_parameter_name(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return "input"; break;
-case kParamB: return "depth"; break;
-case kParamC: return "bright"; break;
-case kParamD: return "output"; break;
+            case kParamA: return "input"; break;
+            case kParamB: return "depth"; break;
+            case kParamC: return "bright"; break;
+            case kParamD: return "output"; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     constexpr std::string_view get_parameter_title(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return "Input"; break;
-case kParamB: return "Depth"; break;
-case kParamC: return "Bright"; break;
-case kParamD: return "Output"; break;
+            case kParamA: return "Input"; break;
+            case kParamB: return "Depth"; break;
+            case kParamC: return "Bright"; break;
+            case kParamD: return "Output"; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     std::string get_parameter_display(int index) const
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return std::to_string(A); break;
-case kParamB: return std::to_string(B); break;
-case kParamC: return std::to_string(C); break;
-case kParamD: return std::to_string(D); break;
+            case kParamA: return std::to_string(A); break;
+            case kParamB: return std::to_string(B); break;
+            case kParamC: return std::to_string(C); break;
+            case kParamD: return std::to_string(D); break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     constexpr std::string_view get_parameter_label(int index) const
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return ""; break;
-case kParamB: return ""; break;
-case kParamC: return ""; break;
-case kParamD: return ""; break;
+            case kParamA: return ""; break;
+            case kParamB: return ""; break;
+            case kParamC: return ""; break;
+            case kParamD: return ""; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     void process(T** inputs, T** outputs, long sampleFrames)
     {
-        T *in1 = inputs[0];
-        T *in2 = inputs[1];
-        T *out1 = outputs[0];
-        T *out2 = outputs[1];
+        T* in1 = inputs[0];
+        T* in2 = inputs[1];
+        T* out1 = outputs[0];
+        T* out2 = outputs[1];
 
-        	double inputGain = A*2.0;
-	if (inputGain > 1.0) inputGain *= inputGain; else inputGain = 1.0-pow(1.0-inputGain,2);
-	//this is the fader curve from ConsoleX with 0.5 being unity gain
-	int stages = (int)(B*12.0)+2;
-	//each stage brings in an additional layer of harmonics on the waveshaping
-	double bright = (1.0-C)*0.15;
-	//higher slews suppress these higher harmonics when they are sure to just alias
-	double outputGain = D*2.0;
-	if (outputGain > 1.0) outputGain *= outputGain; else outputGain = 1.0-pow(1.0-outputGain,2);
-	outputGain *= 0.68;
-	//this is the fader curve from ConsoleX, rescaled to work with Hypersoft
-    while (--sampleFrames >= 0)
-    {
-		double inputSampleL = *in1;
-		double inputSampleR = *in2;
-		if (fabs(inputSampleL)<1.18e-23) inputSampleL = fpdL * 1.18e-17;
-		if (fabs(inputSampleR)<1.18e-23) inputSampleR = fpdR * 1.18e-17;
-		inputSampleL *= inputGain;
-		inputSampleR *= inputGain;
-		inputSampleL = sin(inputSampleL); inputSampleL += (sin(inputSampleL*2.0)/2.0);
-		inputSampleR = sin(inputSampleR); inputSampleR += (sin(inputSampleR*2.0)/2.0);
-		for (int count = 2; count<stages; count++){
-			inputSampleL += ((sin(inputSampleL*(double)count)/(double)pow(count,3))*fmax(0.0,1.0-fabs((inputSampleL-lastSampleL)*bright*(double)(count*count))));
-			inputSampleR += ((sin(inputSampleR*(double)count)/(double)pow(count,3))*fmax(0.0,1.0-fabs((inputSampleR-lastSampleR)*bright*(double)(count*count))));
-		}
-		lastSampleL = inputSampleL;
-		lastSampleR = inputSampleR;
-		inputSampleL *= outputGain;
-		inputSampleR *= outputGain;
-		//begin 64 bit stereo floating point dither
-		//int expon; frexp((double)inputSampleL, &expon);
-		fpdL ^= fpdL << 13; fpdL ^= fpdL >> 17; fpdL ^= fpdL << 5;
-		//inputSampleL += ((double(fpdL)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
-		//frexp((double)inputSampleR, &expon);
-		fpdR ^= fpdR << 13; fpdR ^= fpdR >> 17; fpdR ^= fpdR << 5;
-		//inputSampleR += ((double(fpdR)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
-		//end 64 bit stereo floating point dither
-		*out1 = inputSampleL;
-		*out2 = inputSampleR;
-		in1++;
-		in2++;
-		out1++;
-		out2++;
+        double inputGain = A * 2.0;
+        if (inputGain > 1.0) {
+            inputGain *= inputGain;
+        }
+        else {
+            inputGain = 1.0 - pow(1.0 - inputGain, 2);
+        }
+        // this is the fader curve from ConsoleX with 0.5 being unity gain
+        int stages = (int)(B * 12.0) + 2;
+        // each stage brings in an additional layer of harmonics on the waveshaping
+        double bright = (1.0 - C) * 0.15;
+        // higher slews suppress these higher harmonics when they are sure to just alias
+        double outputGain = D * 2.0;
+        if (outputGain > 1.0) {
+            outputGain *= outputGain;
+        }
+        else {
+            outputGain = 1.0 - pow(1.0 - outputGain, 2);
+        }
+        outputGain *= 0.68;
+        // this is the fader curve from ConsoleX, rescaled to work with Hypersoft
+        while (--sampleFrames >= 0)
+        {
+            double inputSampleL = *in1;
+            double inputSampleR = *in2;
+            if (fabs(inputSampleL) < 1.18e-23) {
+                inputSampleL = fpdL * 1.18e-17;
+            }
+            if (fabs(inputSampleR) < 1.18e-23) {
+                inputSampleR = fpdR * 1.18e-17;
+            }
+            inputSampleL *= inputGain;
+            inputSampleR *= inputGain;
+            inputSampleL = sin(inputSampleL);
+            inputSampleL += (sin(inputSampleL * 2.0) / 2.0);
+            inputSampleR = sin(inputSampleR);
+            inputSampleR += (sin(inputSampleR * 2.0) / 2.0);
+            for (int count = 2; count < stages; count++) {
+                inputSampleL += ((sin(inputSampleL * (double)count) / (double)pow(count, 3)) * fmax(0.0, 1.0 - fabs((inputSampleL - lastSampleL) * bright * (double)(count * count))));
+                inputSampleR += ((sin(inputSampleR * (double)count) / (double)pow(count, 3)) * fmax(0.0, 1.0 - fabs((inputSampleR - lastSampleR) * bright * (double)(count * count))));
+            }
+            lastSampleL = inputSampleL;
+            lastSampleR = inputSampleR;
+            inputSampleL *= outputGain;
+            inputSampleR *= outputGain;
+            // begin 64 bit stereo floating point dither
+            // int expon; frexp((double)inputSampleL, &expon);
+            fpdL ^= fpdL << 13;
+            fpdL ^= fpdL >> 17;
+            fpdL ^= fpdL << 5;
+            // inputSampleL += ((double(fpdL)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
+            // frexp((double)inputSampleR, &expon);
+            fpdR ^= fpdR << 13;
+            fpdR ^= fpdR >> 17;
+            fpdR ^= fpdR << 5;
+            // inputSampleR += ((double(fpdR)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
+            // end 64 bit stereo floating point dither
+            *out1 = inputSampleL;
+            *out2 = inputSampleR;
+            in1++;
+            in2++;
+            out1++;
+            out2++;
+        }
     }
-
-    }
-
 };
 } // namespace airwindohhs::hypersoft

@@ -2,10 +2,9 @@
 #include "effect.hpp"
 #include <cstdlib>
 
-namespace airwindohhs::dubly3
-{
+namespace airwindohhs::dubly3 {
 
-constexpr std::string_view k_name{"Dubly3"};
+constexpr std::string_view k_name{ "Dubly3" };
 constexpr std::string_view k_short_description{
     "Dubly3 refines and transforms the Dubly sound."
 };
@@ -23,248 +22,306 @@ class Dubly3 final : public Effect<T>
     float B;
     float C;
     float D;
-	double iirEncL;
-	double iirDecL;
-	double compEncL;
-	double compDecL;
-	double avgEncL;
-	double avgDecL;
-	double iirEncR;
-	double iirDecR;
-	double compEncR;
-	double compDecR;
-	double avgEncR;
-	double avgDecR;
-	uint32_t fpdL;
-	uint32_t fpdR;
-	//default stuff
+    double iirEncL;
+    double iirDecL;
+    double compEncL;
+    double compDecL;
+    double avgEncL;
+    double avgDecL;
+    double iirEncR;
+    double iirDecR;
+    double compEncR;
+    double compDecR;
+    double avgEncR;
+    double avgDecR;
+    uint32_t fpdL;
+    uint32_t fpdR;
+    // default stuff
 
-
-public:
+  public:
     Dubly3()
     {
-        	A = 0.5;
-	B = 0.5;
-	C = 0.5;
-	D = 0.5;
-	iirEncL = 0.0; iirEncR = 0.0;
-	iirDecL = 0.0; iirDecR = 0.0;
-	compEncL = 1.0; compEncR = 1.0;
-	compDecL = 1.0; compDecR = 1.0;
-	avgEncL = 0.0; avgEncR = 0.0;
-	avgDecL = 0.0; avgDecR = 0.0;
-	fpdL = 1.0; while (fpdL < 16386) fpdL = rand()*UINT32_MAX;
-	fpdR = 1.0; while (fpdR < 16386) fpdR = rand()*UINT32_MAX;
-	//this is reset: values being initialized only once. Startup values, whatever they are.
-
+        A = 0.5;
+        B = 0.5;
+        C = 0.5;
+        D = 0.5;
+        iirEncL = 0.0;
+        iirEncR = 0.0;
+        iirDecL = 0.0;
+        iirDecR = 0.0;
+        compEncL = 1.0;
+        compEncR = 1.0;
+        compDecL = 1.0;
+        compDecR = 1.0;
+        avgEncL = 0.0;
+        avgEncR = 0.0;
+        avgDecL = 0.0;
+        avgDecR = 0.0;
+        fpdL = 1.0;
+        while (fpdL < 16386) {
+            fpdL = rand() * UINT32_MAX;
+        }
+        fpdR = 1.0;
+        while (fpdR < 16386) {
+            fpdR = rand() * UINT32_MAX;
+        }
+        // this is reset: values being initialized only once. Startup values, whatever they are.
     }
 
     enum params
     {
         kParamA = 0,
-kParamB = 1,
-kParamC = 2,
-kParamD = 3,
-kNumParameters = 4
+        kParamB = 1,
+        kParamC = 2,
+        kParamD = 3,
+        kNumParameters = 4
     };
 
     void set_parameter_value(int index, float value)
     {
         switch (static_cast<params>(index))
         {
-        case kParamA: A = value; break;
-case kParamB: B = value; break;
-case kParamC: C = value; break;
-case kParamD: D = value; break;
+            case kParamA: A = value; break;
+            case kParamB: B = value; break;
+            case kParamC: C = value; break;
+            case kParamD: D = value; break;
 
-        default: break;
+            default: break;
         }
     }
 
     float get_parameter_value(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return A; break;
-case kParamB: return B; break;
-case kParamC: return C; break;
-case kParamD: return D; break;
+            case kParamA: return A; break;
+            case kParamB: return B; break;
+            case kParamC: return C; break;
+            case kParamD: return D; break;
 
-        default: break;
+            default: break;
         }
         return 0.0;
     }
 
     T get_parameter_default(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return 0.5; break;
-case kParamB: return 0.5; break;
-case kParamC: return 0.5; break;
-case kParamD: return 0.5; break;
+            case kParamA: return 0.5; break;
+            case kParamB: return 0.5; break;
+            case kParamC: return 0.5; break;
+            case kParamD: return 0.5; break;
 
-        default: break;
+            default: break;
         }
         return 0.0;
     }
 
     constexpr std::string_view get_parameter_name(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return "input"; break;
-case kParamB: return "tilt"; break;
-case kParamC: return "shape"; break;
-case kParamD: return "output"; break;
+            case kParamA: return "input"; break;
+            case kParamB: return "tilt"; break;
+            case kParamC: return "shape"; break;
+            case kParamD: return "output"; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     constexpr std::string_view get_parameter_title(int index)
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return "Input"; break;
-case kParamB: return "Tilt"; break;
-case kParamC: return "Shape"; break;
-case kParamD: return "Output"; break;
+            case kParamA: return "Input"; break;
+            case kParamB: return "Tilt"; break;
+            case kParamC: return "Shape"; break;
+            case kParamD: return "Output"; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     std::string get_parameter_display(int index) const
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return std::to_string(A); break;
-case kParamB: return std::to_string(B); break;
-case kParamC: return std::to_string(C); break;
-case kParamD: return std::to_string(D); break;
+            case kParamA: return std::to_string(A); break;
+            case kParamB: return std::to_string(B); break;
+            case kParamC: return std::to_string(C); break;
+            case kParamD: return std::to_string(D); break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     constexpr std::string_view get_parameter_label(int index) const
     {
-        switch(static_cast<params>(index))
+        switch (static_cast<params>(index))
         {
-        case kParamA: return ""; break;
-case kParamB: return ""; break;
-case kParamC: return ""; break;
-case kParamD: return ""; break;
+            case kParamA: return ""; break;
+            case kParamB: return ""; break;
+            case kParamC: return ""; break;
+            case kParamD: return ""; break;
 
-        default: break;
+            default: break;
         }
         return {};
     }
 
     void process(T** inputs, T** outputs, long sampleFrames)
     {
-        T *in1 = inputs[0];
-        T *in2 = inputs[1];
-        T *out1 = outputs[0];
-        T *out2 = outputs[1];
+        T* in1 = inputs[0];
+        T* in2 = inputs[1];
+        T* out1 = outputs[0];
+        T* out2 = outputs[1];
 
-        	double overallscale = 1.0;
-	overallscale /= 44100.0;
-	overallscale *= Effect<T>::getSampleRate();
-	double inputGain = pow(A*2.0,2.0);
-	double dublyAmount = B*2.0;
-	double outlyAmount = (1.0-B)*-2.0;
-	if (outlyAmount < -1.0) outlyAmount = -1.0;
-	double iirEncFreq = (1.0-C)/overallscale;
-	double iirDecFreq = C/overallscale;
-	double outputGain = D*2.0;
-    while (--sampleFrames >= 0)
-    {
-		double inputSampleL = *in1;
-		double inputSampleR = *in2;
-		if (fabs(inputSampleL)<1.18e-23) inputSampleL = fpdL * 1.18e-17;
-		if (fabs(inputSampleR)<1.18e-23) inputSampleR = fpdR * 1.18e-17;
-		if (inputGain != 1.0) {
-			inputSampleL *= inputGain;
-			inputSampleR *= inputGain;
-		}
-		//Dubly encode
-		iirEncL = (iirEncL * (1.0 - iirEncFreq)) + (inputSampleL * iirEncFreq);
-		double highPart = ((inputSampleL-iirEncL)*2.848);
-		highPart += avgEncL; avgEncL = (inputSampleL-iirEncL)*1.152;
-		if (highPart > 1.0) highPart = 1.0; if (highPart < -1.0) highPart = -1.0;
-		double dubly = fabs(highPart);
-		if (dubly > 0.0) {
-			double adjust = log(1.0+(255.0*dubly))/2.40823996531;
-			if (adjust > 0.0) dubly /= adjust;
-			compEncL = (compEncL*(1.0-iirEncFreq))+(dubly*iirEncFreq);
-			inputSampleL += ((highPart*compEncL)*dublyAmount);
-		} //end Dubly encode L
-		iirEncR = (iirEncR * (1.0 - iirEncFreq)) + (inputSampleR * iirEncFreq);
-		highPart = ((inputSampleR-iirEncR)*2.848);
-		highPart += avgEncR; avgEncR = (inputSampleR-iirEncR)*1.152;
-		if (highPart > 1.0) highPart = 1.0; if (highPart < -1.0) highPart = -1.0;
-		dubly = fabs(highPart);
-		if (dubly > 0.0) {
-			double adjust = log(1.0+(255.0*dubly))/2.40823996531;
-			if (adjust > 0.0) dubly /= adjust;
-			compEncR = (compEncR*(1.0-iirEncFreq))+(dubly*iirEncFreq);
-			inputSampleR += ((highPart*compEncR)*dublyAmount);
-		} //end Dubly encode R
-		if (inputSampleL > 1.57079633) inputSampleL = 1.57079633;
-		if (inputSampleL < -1.57079633) inputSampleL = -1.57079633;
-		inputSampleL = sin(inputSampleL);
-		if (inputSampleR > 1.57079633) inputSampleR = 1.57079633;
-		if (inputSampleR < -1.57079633) inputSampleR = -1.57079633;
-		inputSampleR = sin(inputSampleR);
-		//Dubly decode
-		iirDecL = (iirDecL * (1.0 - iirDecFreq)) + (inputSampleL * iirDecFreq);
-		highPart = ((inputSampleL-iirDecL)*2.628);
-		highPart += avgDecL; avgDecL = (inputSampleL-iirDecL)*1.372;
-		if (highPart > 1.0) highPart = 1.0; if (highPart < -1.0) highPart = -1.0;
-		dubly = fabs(highPart);
-		if (dubly > 0.0) {
-			double adjust = log(1.0+(255.0*dubly))/2.40823996531;
-			if (adjust > 0.0) dubly /= adjust;
-			compDecL = (compDecL*(1.0-iirDecFreq))+(dubly*iirDecFreq);
-			inputSampleL += ((highPart*compDecL)*outlyAmount);
-		} //end Dubly decode L
-		iirDecR = (iirDecR * (1.0 - iirDecFreq)) + (inputSampleR * iirDecFreq);
-		highPart = ((inputSampleR-iirDecR)*2.628);
-		highPart += avgDecR; avgDecR = (inputSampleR-iirDecR)*1.372;
-		if (highPart > 1.0) highPart = 1.0; if (highPart < -1.0) highPart = -1.0;
-		dubly = fabs(highPart);
-		if (dubly > 0.0) {
-			double adjust = log(1.0+(255.0*dubly))/2.40823996531;
-			if (adjust > 0.0) dubly /= adjust;
-			compDecR = (compDecR*(1.0-iirDecFreq))+(dubly*iirDecFreq);
-			inputSampleR += ((highPart*compDecR)*outlyAmount);
-		} //end Dubly decode R
-		if (outputGain != 1.0) {
-			inputSampleL *= outputGain;
-			inputSampleR *= outputGain;
-		}		
-		//begin 64 bit stereo floating point dither
-		//int expon; frexp((double)inputSampleL, &expon);
-		fpdL ^= fpdL << 13; fpdL ^= fpdL >> 17; fpdL ^= fpdL << 5;
-		//inputSampleL += ((double(fpdL)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
-		//frexp((double)inputSampleR, &expon);
-		fpdR ^= fpdR << 13; fpdR ^= fpdR >> 17; fpdR ^= fpdR << 5;
-		//inputSampleR += ((double(fpdR)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
-		//end 64 bit stereo floating point dither
-		*out1 = inputSampleL;
-		*out2 = inputSampleR;
-		in1++;
-		in2++;
-		out1++;
-		out2++;
+        double overallscale = 1.0;
+        overallscale /= 44100.0;
+        overallscale *= Effect<T>::getSampleRate();
+        double inputGain = pow(A * 2.0, 2.0);
+        double dublyAmount = B * 2.0;
+        double outlyAmount = (1.0 - B) * -2.0;
+        if (outlyAmount < -1.0) {
+            outlyAmount = -1.0;
+        }
+        double iirEncFreq = (1.0 - C) / overallscale;
+        double iirDecFreq = C / overallscale;
+        double outputGain = D * 2.0;
+        while (--sampleFrames >= 0)
+        {
+            double inputSampleL = *in1;
+            double inputSampleR = *in2;
+            if (fabs(inputSampleL) < 1.18e-23) {
+                inputSampleL = fpdL * 1.18e-17;
+            }
+            if (fabs(inputSampleR) < 1.18e-23) {
+                inputSampleR = fpdR * 1.18e-17;
+            }
+            if (inputGain != 1.0) {
+                inputSampleL *= inputGain;
+                inputSampleR *= inputGain;
+            }
+            // Dubly encode
+            iirEncL = (iirEncL * (1.0 - iirEncFreq)) + (inputSampleL * iirEncFreq);
+            double highPart = ((inputSampleL - iirEncL) * 2.848);
+            highPart += avgEncL;
+            avgEncL = (inputSampleL - iirEncL) * 1.152;
+            if (highPart > 1.0) {
+                highPart = 1.0;
+            }
+            if (highPart < -1.0) {
+                highPart = -1.0;
+            }
+            double dubly = fabs(highPart);
+            if (dubly > 0.0) {
+                double adjust = log(1.0 + (255.0 * dubly)) / 2.40823996531;
+                if (adjust > 0.0) {
+                    dubly /= adjust;
+                }
+                compEncL = (compEncL * (1.0 - iirEncFreq)) + (dubly * iirEncFreq);
+                inputSampleL += ((highPart * compEncL) * dublyAmount);
+            } // end Dubly encode L
+            iirEncR = (iirEncR * (1.0 - iirEncFreq)) + (inputSampleR * iirEncFreq);
+            highPart = ((inputSampleR - iirEncR) * 2.848);
+            highPart += avgEncR;
+            avgEncR = (inputSampleR - iirEncR) * 1.152;
+            if (highPart > 1.0) {
+                highPart = 1.0;
+            }
+            if (highPart < -1.0) {
+                highPart = -1.0;
+            }
+            dubly = fabs(highPart);
+            if (dubly > 0.0) {
+                double adjust = log(1.0 + (255.0 * dubly)) / 2.40823996531;
+                if (adjust > 0.0) {
+                    dubly /= adjust;
+                }
+                compEncR = (compEncR * (1.0 - iirEncFreq)) + (dubly * iirEncFreq);
+                inputSampleR += ((highPart * compEncR) * dublyAmount);
+            } // end Dubly encode R
+            if (inputSampleL > 1.57079633) {
+                inputSampleL = 1.57079633;
+            }
+            if (inputSampleL < -1.57079633) {
+                inputSampleL = -1.57079633;
+            }
+            inputSampleL = sin(inputSampleL);
+            if (inputSampleR > 1.57079633) {
+                inputSampleR = 1.57079633;
+            }
+            if (inputSampleR < -1.57079633) {
+                inputSampleR = -1.57079633;
+            }
+            inputSampleR = sin(inputSampleR);
+            // Dubly decode
+            iirDecL = (iirDecL * (1.0 - iirDecFreq)) + (inputSampleL * iirDecFreq);
+            highPart = ((inputSampleL - iirDecL) * 2.628);
+            highPart += avgDecL;
+            avgDecL = (inputSampleL - iirDecL) * 1.372;
+            if (highPart > 1.0) {
+                highPart = 1.0;
+            }
+            if (highPart < -1.0) {
+                highPart = -1.0;
+            }
+            dubly = fabs(highPart);
+            if (dubly > 0.0) {
+                double adjust = log(1.0 + (255.0 * dubly)) / 2.40823996531;
+                if (adjust > 0.0) {
+                    dubly /= adjust;
+                }
+                compDecL = (compDecL * (1.0 - iirDecFreq)) + (dubly * iirDecFreq);
+                inputSampleL += ((highPart * compDecL) * outlyAmount);
+            } // end Dubly decode L
+            iirDecR = (iirDecR * (1.0 - iirDecFreq)) + (inputSampleR * iirDecFreq);
+            highPart = ((inputSampleR - iirDecR) * 2.628);
+            highPart += avgDecR;
+            avgDecR = (inputSampleR - iirDecR) * 1.372;
+            if (highPart > 1.0) {
+                highPart = 1.0;
+            }
+            if (highPart < -1.0) {
+                highPart = -1.0;
+            }
+            dubly = fabs(highPart);
+            if (dubly > 0.0) {
+                double adjust = log(1.0 + (255.0 * dubly)) / 2.40823996531;
+                if (adjust > 0.0) {
+                    dubly /= adjust;
+                }
+                compDecR = (compDecR * (1.0 - iirDecFreq)) + (dubly * iirDecFreq);
+                inputSampleR += ((highPart * compDecR) * outlyAmount);
+            } // end Dubly decode R
+            if (outputGain != 1.0) {
+                inputSampleL *= outputGain;
+                inputSampleR *= outputGain;
+            }
+            // begin 64 bit stereo floating point dither
+            // int expon; frexp((double)inputSampleL, &expon);
+            fpdL ^= fpdL << 13;
+            fpdL ^= fpdL >> 17;
+            fpdL ^= fpdL << 5;
+            // inputSampleL += ((double(fpdL)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
+            // frexp((double)inputSampleR, &expon);
+            fpdR ^= fpdR << 13;
+            fpdR ^= fpdR >> 17;
+            fpdR ^= fpdR << 5;
+            // inputSampleR += ((double(fpdR)-uint32_t(0x7fffffff)) * 1.1e-44l * pow(2,expon+62));
+            // end 64 bit stereo floating point dither
+            *out1 = inputSampleL;
+            *out2 = inputSampleR;
+            in1++;
+            in2++;
+            out1++;
+            out2++;
+        }
     }
-
-    }
-
 };
 } // namespace airwindohhs::dubly3
