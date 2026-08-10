@@ -50,9 +50,11 @@ class ADClip9 final : public Effect<T>
         D = 0.75;
         E = 0.0;
         lastSampleL = 0.0;
+        lastDryL = 0.0;
         wasPosClipL = false;
         wasNegClipL = false;
         lastSampleR = 0.0;
+        lastDryR = 0.0;
         wasPosClipR = false;
         wasNegClipR = false;
         for (int x = 0; x < 17; x++) {
