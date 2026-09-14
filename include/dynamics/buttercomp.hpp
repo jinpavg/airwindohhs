@@ -66,6 +66,56 @@ class ButterComp final : public Effect<T>
         // this is reset: values being initialized only once. Startup values, whatever they are.
     }
 
+    // BEGIN GENERATED SEEDED STATE
+    explicit ButterComp(std::uint64_t seed) noexcept { reset(seed); }
+
+    // Restores DSP and parameter defaults, retaining the configured sample rate.
+    // SplitMix64 expands the seed into independent, nonzero stereo noise states.
+    // No allocation, shared RNG, construction, destruction or retry loop.
+    void reset(std::uint64_t seed) noexcept {
+        auto next_seed = [&seed]() noexcept -> std::uint32_t {
+            auto z = (seed += UINT64_C(0x9e3779b97f4a7c15));
+            z = (z ^ (z >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)) * UINT64_C(0x94d049bb133111eb);
+            z ^= z >> 31;
+            return 16386u + static_cast<std::uint32_t>(z % UINT64_C(4294950910));
+        };
+        controlAposL = {};
+        controlAnegL = {};
+        controlBposL = {};
+        controlBnegL = {};
+        targetposL = {};
+        targetnegL = {};
+        controlAposR = {};
+        controlAnegR = {};
+        controlBposR = {};
+        controlBnegR = {};
+        targetposR = {};
+        targetnegR = {};
+        fpdL = {};
+        fpdR = {};
+        A = {};
+        B = {};
+        A = 0.0;
+        B = 1.0;
+        controlAposL = 1.0;
+        controlAnegL = 1.0;
+        controlBposL = 1.0;
+        controlBnegL = 1.0;
+        targetposL = 1.0;
+        targetnegL = 1.0;
+        controlAposR = 1.0;
+        controlAnegR = 1.0;
+        controlBposR = 1.0;
+        controlBnegR = 1.0;
+        targetposR = 1.0;
+        targetnegR = 1.0;
+        fpdL = next_seed();
+        fpdR = next_seed();
+        // this is reset: values being initialized only once. Startup values, whatever they are.
+        }
+    // END GENERATED SEEDED STATE
+
     enum params
     {
         kParamA = 0,

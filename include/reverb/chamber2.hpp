@@ -203,6 +203,206 @@ class Chamber2 final : public Effect<T>
         delayM = 0;
     }
 
+    // BEGIN GENERATED SEEDED STATE
+    explicit Chamber2(std::uint64_t seed) noexcept { reset(seed); }
+
+    // Restores DSP and parameter defaults, retaining the configured sample rate.
+    // SplitMix64 expands the seed into independent, nonzero stereo noise states.
+    // No allocation, shared RNG, construction, destruction or retry loop.
+    void reset(std::uint64_t seed) noexcept {
+        auto next_seed = [&seed]() noexcept -> std::uint32_t {
+            auto z = (seed += UINT64_C(0x9e3779b97f4a7c15));
+            z = (z ^ (z >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)) * UINT64_C(0x94d049bb133111eb);
+            z ^= z >> 31;
+            return 16386u + static_cast<std::uint32_t>(z % UINT64_C(4294950910));
+        };
+        for (auto& value : aEL) value = {};
+        for (auto& value : aFL) value = {};
+        for (auto& value : aGL) value = {};
+        for (auto& value : aHL) value = {};
+        for (auto& value : aAL) value = {};
+        for (auto& value : aBL) value = {};
+        for (auto& value : aCL) value = {};
+        for (auto& value : aDL) value = {};
+        for (auto& value : aIL) value = {};
+        for (auto& value : aJL) value = {};
+        for (auto& value : aKL) value = {};
+        for (auto& value : aLL) value = {};
+        for (auto& value : aML) value = {};
+        feedbackAL = {};
+        feedbackBL = {};
+        feedbackCL = {};
+        feedbackDL = {};
+        previousAL = {};
+        previousBL = {};
+        previousCL = {};
+        previousDL = {};
+        for (auto& value : lastRefL) value = {};
+        for (auto& value : aER) value = {};
+        for (auto& value : aFR) value = {};
+        for (auto& value : aGR) value = {};
+        for (auto& value : aHR) value = {};
+        for (auto& value : aAR) value = {};
+        for (auto& value : aBR) value = {};
+        for (auto& value : aCR) value = {};
+        for (auto& value : aDR) value = {};
+        for (auto& value : aIR) value = {};
+        for (auto& value : aJR) value = {};
+        for (auto& value : aKR) value = {};
+        for (auto& value : aLR) value = {};
+        for (auto& value : aMR) value = {};
+        feedbackAR = {};
+        feedbackBR = {};
+        feedbackCR = {};
+        feedbackDR = {};
+        previousAR = {};
+        previousBR = {};
+        previousCR = {};
+        previousDR = {};
+        for (auto& value : lastRefR) value = {};
+        countA = {};
+        delayA = {};
+        countB = {};
+        delayB = {};
+        countC = {};
+        delayC = {};
+        countD = {};
+        delayD = {};
+        countE = {};
+        delayE = {};
+        countF = {};
+        delayF = {};
+        countG = {};
+        delayG = {};
+        countH = {};
+        delayH = {};
+        countI = {};
+        delayI = {};
+        countJ = {};
+        delayJ = {};
+        countK = {};
+        delayK = {};
+        countL = {};
+        delayL = {};
+        countM = {};
+        delayM = {};
+        cycle = {};
+        fpdL = {};
+        fpdR = {};
+        A = {};
+        B = {};
+        C = {};
+        D = {};
+        A = 0.34;
+        B = 0.31;
+        C = 0.28;
+        D = 0.25;
+        for (int count = 0; count < 9999; count++) {
+            aEL[count] = 0.0;
+            aER[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aFL[count] = 0.0;
+            aFR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aGL[count] = 0.0;
+            aGR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aHL[count] = 0.0;
+            aHR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aAL[count] = 0.0;
+            aAR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aBL[count] = 0.0;
+            aBR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aCL[count] = 0.0;
+            aCR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aDL[count] = 0.0;
+            aDR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aIL[count] = 0.0;
+            aIR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aJL[count] = 0.0;
+            aJR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aKL[count] = 0.0;
+            aKR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aLL[count] = 0.0;
+            aLR[count] = 0.0;
+        }
+        for (int count = 0; count < 9999; count++) {
+            aML[count] = 0.0;
+            aMR[count] = 0.0;
+        }
+        feedbackAL = 0.0;
+        feedbackAR = 0.0;
+        feedbackBL = 0.0;
+        feedbackBR = 0.0;
+        feedbackCL = 0.0;
+        feedbackCR = 0.0;
+        feedbackDL = 0.0;
+        feedbackDR = 0.0;
+        previousAL = 0.0;
+        previousAR = 0.0;
+        previousBL = 0.0;
+        previousBR = 0.0;
+        previousCL = 0.0;
+        previousCR = 0.0;
+        previousDL = 0.0;
+        previousDR = 0.0;
+        for (int count = 0; count < 9; count++) {
+            lastRefL[count] = 0.0;
+            lastRefR[count] = 0.0;
+        }
+        countI = 1;
+        countJ = 1;
+        countK = 1;
+        countL = 1;
+        countM = 1;
+        countA = 1;
+        countB = 1;
+        countC = 1;
+        countD = 1;
+        countE = 1;
+        countF = 1;
+        countG = 1;
+        countH = 1;
+        cycle = 0;
+        fpdL = next_seed();
+        fpdR = next_seed();
+        // this is reset: values being initialized only once. Startup values, whatever they are.
+        delayA = 0;
+        delayB = 0;
+        delayC = 0;
+        delayD = 0;
+        delayE = 0;
+        delayF = 0;
+        delayG = 0;
+        delayH = 0;
+        delayI = 0;
+        delayJ = 0;
+        delayK = 0;
+        delayL = 0;
+        delayM = 0;
+        }
+    // END GENERATED SEEDED STATE
+
     enum params
     {
         kParamA = 0,

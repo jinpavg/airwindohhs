@@ -325,6 +325,8 @@ class Plugin:
 
         try:
             filled_template = template.substitute(self._to_dict())
+            from scripts.seeded_state import add_seeded_state
+            filled_template = add_seeded_state(filled_template, self.title)
         except KeyError:
             raise GrabError("Could not substitute template")
 

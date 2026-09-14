@@ -50,6 +50,40 @@ class PurestGain final : public Effect<T>
         // this is reset: values being initialized only once. Startup values, whatever they are.
     }
 
+    // BEGIN GENERATED SEEDED STATE
+    explicit PurestGain(std::uint64_t seed) noexcept { reset(seed); }
+
+    // Restores DSP and parameter defaults, retaining the configured sample rate.
+    // SplitMix64 expands the seed into independent, nonzero stereo noise states.
+    // No allocation, shared RNG, construction, destruction or retry loop.
+    void reset(std::uint64_t seed) noexcept {
+        auto next_seed = [&seed]() noexcept -> std::uint32_t {
+            auto z = (seed += UINT64_C(0x9e3779b97f4a7c15));
+            z = (z ^ (z >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+            z = (z ^ (z >> 27)) * UINT64_C(0x94d049bb133111eb);
+            z ^= z >> 31;
+            return 16386u + static_cast<std::uint32_t>(z % UINT64_C(4294950910));
+        };
+        fpdL = {};
+        fpdR = {};
+        gainchase = {};
+        settingchase = {};
+        gainBchase = {};
+        chasespeed = {};
+        A = {};
+        B = {};
+        A = 0.5;
+        B = 1.0;
+        gainchase = -90.0;
+        settingchase = -90.0;
+        gainBchase = -90.0;
+        chasespeed = 350.0;
+        fpdL = next_seed();
+        fpdR = next_seed();
+        // this is reset: values being initialized only once. Startup values, whatever they are.
+        }
+    // END GENERATED SEEDED STATE
+
     enum params
     {
         kParamA = 0,
