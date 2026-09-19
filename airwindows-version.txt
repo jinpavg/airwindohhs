@@ -1,1 +1,1 @@
-https://github.com/airwindows/airwindows.git@dff871d91edc1b843d4fc2dccf1273325801b7eb
+https://github.com/airwindows/airwindows.git@d22a25b7f7c0c8c05e9f3ae480e7f1da9769f49d
