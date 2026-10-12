@@ -9,8 +9,6 @@ on:
       max_plugins:
         description: "Max number of new plugins to import this run (0 = unlimited)"
         default: "5"
-  schedule:
-    - cron: "0 13 * * *"
 
 permissions:
   contents: write
