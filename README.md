@@ -57,6 +57,28 @@ Run `python3 scripts/seeded_state.py --check` to check existing headers without
 fetching upstream sources. Configure `AIRWINDOHHS_BUILD_STATE_TESTS=ON` to run
 the state and generation tests; `AIRWINDOHHS_BUILD_TOOLS=OFF` skips catalog tools.
 
+## Local DSP changes
+
+Two headers carry hand edits that remove clicks when a parameter is moved while
+audio plays (an XY pad sends a new value every few callbacks). With parameters
+held still, both render bit-identically to the generated originals.
+
+- `reverb/chamber2.hpp`: every delay line is a fixed 10000-tick ring read
+  `delay` ticks behind one shared write head. A `delay` or `thick` change
+  crossfades the old read positions into the new ones over 1024 ticks; a change
+  made mid-crossfade waits for it to finish. The generated original re-folded
+  each ring at its new length, so every change read stale history.
+- `effects/glitchshifter.hpp`: the upper part of each 131076-sample buffer
+  keeps a 65537-sample history. A `tighten` (width) change lays the splice
+  buffer out again from it as if it had always run at the new width, and moves
+  the zero-cross registry with its samples instead of clearing it. The original
+  re-wrapped the buffer in place (stale reads) and cleared the registry (hard
+  splices).
+
+`grab` regenerates headers from upstream source and would drop these edits:
+reapply them after regenerating either plugin. `test/legacy_header_checksums.json`
+pins the edited Chamber2.
+
 ## Meta plugin
 
 `include/meta.hpp` is a single header giving programmatic access to every

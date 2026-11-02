@@ -64,19 +64,28 @@ class Chamber2 final : public Effect<T>
     double previousCR;
     double previousDR;
     double lastRefR[10];
-    int countA, delayA;
-    int countB, delayB;
-    int countC, delayC;
-    int countD, delayD;
-    int countE, delayE;
-    int countF, delayF;
-    int countG, delayG;
-    int countH, delayH;
-    int countI, delayI;
-    int countJ, delayJ;
-    int countK, delayK;
-    int countL, delayL;
-    int countM, delayM;
+    int delayA;
+    int delayB;
+    int delayC;
+    int delayD;
+    int delayE;
+    int delayF;
+    int delayG;
+    int delayH;
+    int delayI;
+    int delayJ;
+    int delayK;
+    int delayL;
+    int delayM;
+    // Each line is a fixed ring read delay ticks behind one shared write head,
+    // so a delay change moves a read position instead of re-folding the ring
+    // (which jumped into stale history). Changes crossfade from the old read
+    // positions to the new ones over fadeTicks; lines are 0-12 = A-M.
+    int writeHead;
+    int fadeFrom[13];
+    int fadeTo[13];
+    int fadeRemaining;
+    int fadePrimed;
     int cycle; // all these ints are shared across channels, not duplicated
     uint32_t fpdL;
     uint32_t fpdR;
@@ -165,19 +174,6 @@ class Chamber2 final : public Effect<T>
             lastRefL[count] = 0.0;
             lastRefR[count] = 0.0;
         }
-        countI = 1;
-        countJ = 1;
-        countK = 1;
-        countL = 1;
-        countM = 1;
-        countA = 1;
-        countB = 1;
-        countC = 1;
-        countD = 1;
-        countE = 1;
-        countF = 1;
-        countG = 1;
-        countH = 1;
         cycle = 0;
         fpdL = 1.0;
         while (fpdL < 16386) {
@@ -201,6 +197,13 @@ class Chamber2 final : public Effect<T>
         delayK = 0;
         delayL = 0;
         delayM = 0;
+        writeHead = 0;
+        for (int count = 0; count < 13; count++) {
+            fadeFrom[count] = 0;
+            fadeTo[count] = 0;
+        }
+        fadeRemaining = 0;
+        fadePrimed = 0;
     }
 
     // BEGIN GENERATED SEEDED STATE
@@ -261,32 +264,24 @@ class Chamber2 final : public Effect<T>
         previousCR = {};
         previousDR = {};
         for (auto& value : lastRefR) value = {};
-        countA = {};
         delayA = {};
-        countB = {};
         delayB = {};
-        countC = {};
         delayC = {};
-        countD = {};
         delayD = {};
-        countE = {};
         delayE = {};
-        countF = {};
         delayF = {};
-        countG = {};
         delayG = {};
-        countH = {};
         delayH = {};
-        countI = {};
         delayI = {};
-        countJ = {};
         delayJ = {};
-        countK = {};
         delayK = {};
-        countL = {};
         delayL = {};
-        countM = {};
         delayM = {};
+        writeHead = {};
+        for (auto& value : fadeFrom) value = {};
+        for (auto& value : fadeTo) value = {};
+        fadeRemaining = {};
+        fadePrimed = {};
         cycle = {};
         fpdL = {};
         fpdR = {};
@@ -370,19 +365,6 @@ class Chamber2 final : public Effect<T>
             lastRefL[count] = 0.0;
             lastRefR[count] = 0.0;
         }
-        countI = 1;
-        countJ = 1;
-        countK = 1;
-        countL = 1;
-        countM = 1;
-        countA = 1;
-        countB = 1;
-        countC = 1;
-        countD = 1;
-        countE = 1;
-        countF = 1;
-        countG = 1;
-        countH = 1;
         cycle = 0;
         fpdL = next_seed();
         fpdR = next_seed();
@@ -400,6 +382,13 @@ class Chamber2 final : public Effect<T>
         delayK = 0;
         delayL = 0;
         delayM = 0;
+        writeHead = 0;
+        for (int count = 0; count < 13; count++) {
+            fadeFrom[count] = 0;
+            fadeTo[count] = 0;
+        }
+        fadeRemaining = 0;
+        fadePrimed = 0;
         }
     // END GENERATED SEEDED STATE
 
@@ -573,6 +562,24 @@ class Chamber2 final : public Effect<T>
         // Turns out that as you continue to sustain them, it turns from a
         // chunky slapback effect into a smoother reverb tail that can
         // sustain infinitely.
+        const int requested[13] = {delayA, delayB, delayC, delayD, delayE, delayF, delayG,
+                                   delayH, delayI, delayJ, delayK, delayL, delayM};
+        const int fadeTicks = 1024; // about 22ms of reverb ticks
+        double blend = 1.0;
+        auto tap = [&](const double* line, int index) -> double {
+            int to = writeHead - fadeTo[index];
+            if (to < 0) {
+                to += 10000;
+            }
+            if (fadeRemaining == 0) {
+                return line[to];
+            }
+            int from = writeHead - fadeFrom[index];
+            if (from < 0) {
+                from += 10000;
+            }
+            return line[from] + ((line[to] - line[from]) * blend);
+        };
         while (--sampleFrames >= 0)
         {
             double inputSampleL = *in1;
@@ -587,14 +594,27 @@ class Chamber2 final : public Effect<T>
             double drySampleR = inputSampleR;
             cycle++;
             if (cycle == cycleEnd) { // hit the end point and we do a reverb sample
-                aML[countM] = inputSampleL;
-                aMR[countM] = inputSampleR;
-                countM++;
-                if (countM < 0 || countM > delayM) {
-                    countM = 0;
+                if (fadeRemaining == 0) { // a change made mid-fade waits for it to finish
+                    bool changed = false;
+                    for (int line = 0; line < 13; line++) {
+                        if (requested[line] != fadeTo[line]) {
+                            changed = true;
+                        }
+                    }
+                    if (changed) {
+                        for (int line = 0; line < 13; line++) {
+                            fadeFrom[line] = fadePrimed ? fadeTo[line] : requested[line];
+                            fadeTo[line] = requested[line];
+                        }
+                        fadeRemaining = fadePrimed ? fadeTicks : 0;
+                    }
+                    fadePrimed = 1;
                 }
-                inputSampleL = aML[countM - ((countM > delayM) ? delayM + 1 : 0)];
-                inputSampleR = aMR[countM - ((countM > delayM) ? delayM + 1 : 0)];
+                blend = 1.0 - ((double)fadeRemaining / fadeTicks);
+                aML[writeHead] = inputSampleL;
+                aMR[writeHead] = inputSampleR;
+                inputSampleL = tap(aML, 12);
+                inputSampleR = tap(aMR, 12);
                 // predelay to make the first echo still be an echo even when blurred
                 feedbackAL = (feedbackAL * (1.0 - interpolate)) + (previousAL * interpolate);
                 previousAL = feedbackAL;
@@ -612,104 +632,56 @@ class Chamber2 final : public Effect<T>
                 previousCR = feedbackCR;
                 feedbackDR = (feedbackDR * (1.0 - interpolate)) + (previousDR * interpolate);
                 previousDR = feedbackDR;
-                aIL[countI] = inputSampleL + (feedbackAL * regen);
-                aJL[countJ] = inputSampleL + (feedbackBL * regen);
-                aKL[countK] = inputSampleL + (feedbackCL * regen);
-                aLL[countL] = inputSampleL + (feedbackDL * regen);
-                aIR[countI] = inputSampleR + (feedbackAR * regen);
-                aJR[countJ] = inputSampleR + (feedbackBR * regen);
-                aKR[countK] = inputSampleR + (feedbackCR * regen);
-                aLR[countL] = inputSampleR + (feedbackDR * regen);
-                countI++;
-                if (countI < 0 || countI > delayI) {
-                    countI = 0;
-                }
-                countJ++;
-                if (countJ < 0 || countJ > delayJ) {
-                    countJ = 0;
-                }
-                countK++;
-                if (countK < 0 || countK > delayK) {
-                    countK = 0;
-                }
-                countL++;
-                if (countL < 0 || countL > delayL) {
-                    countL = 0;
-                }
-                double outIL = aIL[countI - ((countI > delayI) ? delayI + 1 : 0)];
-                double outJL = aJL[countJ - ((countJ > delayJ) ? delayJ + 1 : 0)];
-                double outKL = aKL[countK - ((countK > delayK) ? delayK + 1 : 0)];
-                double outLL = aLL[countL - ((countL > delayL) ? delayL + 1 : 0)];
-                double outIR = aIR[countI - ((countI > delayI) ? delayI + 1 : 0)];
-                double outJR = aJR[countJ - ((countJ > delayJ) ? delayJ + 1 : 0)];
-                double outKR = aKR[countK - ((countK > delayK) ? delayK + 1 : 0)];
-                double outLR = aLR[countL - ((countL > delayL) ? delayL + 1 : 0)];
+                aIL[writeHead] = inputSampleL + (feedbackAL * regen);
+                aJL[writeHead] = inputSampleL + (feedbackBL * regen);
+                aKL[writeHead] = inputSampleL + (feedbackCL * regen);
+                aLL[writeHead] = inputSampleL + (feedbackDL * regen);
+                aIR[writeHead] = inputSampleR + (feedbackAR * regen);
+                aJR[writeHead] = inputSampleR + (feedbackBR * regen);
+                aKR[writeHead] = inputSampleR + (feedbackCR * regen);
+                aLR[writeHead] = inputSampleR + (feedbackDR * regen);
+                double outIL = tap(aIL, 8);
+                double outJL = tap(aJL, 9);
+                double outKL = tap(aKL, 10);
+                double outLL = tap(aLL, 11);
+                double outIR = tap(aIR, 8);
+                double outJR = tap(aJR, 9);
+                double outKR = tap(aKR, 10);
+                double outLR = tap(aLR, 11);
                 // first block: now we have four outputs
-                aAL[countA] = (outIL - (outJL + outKL + outLL));
-                aBL[countB] = (outJL - (outIL + outKL + outLL));
-                aCL[countC] = (outKL - (outIL + outJL + outLL));
-                aDL[countD] = (outLL - (outIL + outJL + outKL));
-                aAR[countA] = (outIR - (outJR + outKR + outLR));
-                aBR[countB] = (outJR - (outIR + outKR + outLR));
-                aCR[countC] = (outKR - (outIR + outJR + outLR));
-                aDR[countD] = (outLR - (outIR + outJR + outKR));
-                countA++;
-                if (countA < 0 || countA > delayA) {
-                    countA = 0;
-                }
-                countB++;
-                if (countB < 0 || countB > delayB) {
-                    countB = 0;
-                }
-                countC++;
-                if (countC < 0 || countC > delayC) {
-                    countC = 0;
-                }
-                countD++;
-                if (countD < 0 || countD > delayD) {
-                    countD = 0;
-                }
-                double outAL = aAL[countA - ((countA > delayA) ? delayA + 1 : 0)];
-                double outBL = aBL[countB - ((countB > delayB) ? delayB + 1 : 0)];
-                double outCL = aCL[countC - ((countC > delayC) ? delayC + 1 : 0)];
-                double outDL = aDL[countD - ((countD > delayD) ? delayD + 1 : 0)];
-                double outAR = aAR[countA - ((countA > delayA) ? delayA + 1 : 0)];
-                double outBR = aBR[countB - ((countB > delayB) ? delayB + 1 : 0)];
-                double outCR = aCR[countC - ((countC > delayC) ? delayC + 1 : 0)];
-                double outDR = aDR[countD - ((countD > delayD) ? delayD + 1 : 0)];
+                aAL[writeHead] = (outIL - (outJL + outKL + outLL));
+                aBL[writeHead] = (outJL - (outIL + outKL + outLL));
+                aCL[writeHead] = (outKL - (outIL + outJL + outLL));
+                aDL[writeHead] = (outLL - (outIL + outJL + outKL));
+                aAR[writeHead] = (outIR - (outJR + outKR + outLR));
+                aBR[writeHead] = (outJR - (outIR + outKR + outLR));
+                aCR[writeHead] = (outKR - (outIR + outJR + outLR));
+                aDR[writeHead] = (outLR - (outIR + outJR + outKR));
+                double outAL = tap(aAL, 0);
+                double outBL = tap(aBL, 1);
+                double outCL = tap(aCL, 2);
+                double outDL = tap(aDL, 3);
+                double outAR = tap(aAR, 0);
+                double outBR = tap(aBR, 1);
+                double outCR = tap(aCR, 2);
+                double outDR = tap(aDR, 3);
                 // second block: four more outputs
-                aEL[countE] = (outAL - (outBL + outCL + outDL));
-                aFL[countF] = (outBL - (outAL + outCL + outDL));
-                aGL[countG] = (outCL - (outAL + outBL + outDL));
-                aHL[countH] = (outDL - (outAL + outBL + outCL));
-                aER[countE] = (outAR - (outBR + outCR + outDR));
-                aFR[countF] = (outBR - (outAR + outCR + outDR));
-                aGR[countG] = (outCR - (outAR + outBR + outDR));
-                aHR[countH] = (outDR - (outAR + outBR + outCR));
-                countE++;
-                if (countE < 0 || countE > delayE) {
-                    countE = 0;
-                }
-                countF++;
-                if (countF < 0 || countF > delayF) {
-                    countF = 0;
-                }
-                countG++;
-                if (countG < 0 || countG > delayG) {
-                    countG = 0;
-                }
-                countH++;
-                if (countH < 0 || countH > delayH) {
-                    countH = 0;
-                }
-                double outEL = aEL[countE - ((countE > delayE) ? delayE + 1 : 0)];
-                double outFL = aFL[countF - ((countF > delayF) ? delayF + 1 : 0)];
-                double outGL = aGL[countG - ((countG > delayG) ? delayG + 1 : 0)];
-                double outHL = aHL[countH - ((countH > delayH) ? delayH + 1 : 0)];
-                double outER = aER[countE - ((countE > delayE) ? delayE + 1 : 0)];
-                double outFR = aFR[countF - ((countF > delayF) ? delayF + 1 : 0)];
-                double outGR = aGR[countG - ((countG > delayG) ? delayG + 1 : 0)];
-                double outHR = aHR[countH - ((countH > delayH) ? delayH + 1 : 0)];
+                aEL[writeHead] = (outAL - (outBL + outCL + outDL));
+                aFL[writeHead] = (outBL - (outAL + outCL + outDL));
+                aGL[writeHead] = (outCL - (outAL + outBL + outDL));
+                aHL[writeHead] = (outDL - (outAL + outBL + outCL));
+                aER[writeHead] = (outAR - (outBR + outCR + outDR));
+                aFR[writeHead] = (outBR - (outAR + outCR + outDR));
+                aGR[writeHead] = (outCR - (outAR + outBR + outDR));
+                aHR[writeHead] = (outDR - (outAR + outBR + outCR));
+                double outEL = tap(aEL, 4);
+                double outFL = tap(aFL, 5);
+                double outGL = tap(aGL, 6);
+                double outHL = tap(aHL, 7);
+                double outER = tap(aER, 4);
+                double outFR = tap(aFR, 5);
+                double outGR = tap(aGR, 6);
+                double outHR = tap(aHR, 7);
                 // third block: final outputs
                 feedbackAR = (outEL - (outFL + outGL + outHL));
                 feedbackBL = (outFL - (outEL + outGL + outHL));
@@ -722,6 +694,13 @@ class Chamber2 final : public Effect<T>
                 // which we need to feed back into the input again, a bit
                 inputSampleL = (outEL + outFL + outGL + outHL) / 8.0;
                 inputSampleR = (outER + outFR + outGR + outHR) / 8.0;
+                writeHead++;
+                if (writeHead > 9999) {
+                    writeHead = 0;
+                }
+                if (fadeRemaining > 0) {
+                    fadeRemaining--;
+                }
                 // and take the final combined sum of outputs
                 if (cycleEnd == 4) {
                     lastRefL[0] = lastRefL[4]; // start from previous last

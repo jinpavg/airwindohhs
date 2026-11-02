@@ -60,6 +60,10 @@ class GlitchShifter final : public Effect<T>
     double airFactorR;
     int gcount;
     VstInt32 lastwidth;
+    // pL/pR hold the splice buffer in [0, width + 2] and, from index 65539, a
+    // 65537-sample history of everything written (head below), so a width
+    // change can lay the buffer out again instead of reading stale samples.
+    int historyHead;
     bool flip;
     uint32_t fpdL;
     uint32_t fpdR;
@@ -73,7 +77,7 @@ class GlitchShifter final : public Effect<T>
   public:
     GlitchShifter()
     {
-        for (int count = 0; count < 131074; count++) {
+        for (int count = 0; count < 131076; count++) {
             pL[count] = 0;
             pR[count] = 0;
         }
@@ -117,6 +121,7 @@ class GlitchShifter final : public Effect<T>
         splicingR = false;
         gcount = 0;
         lastwidth = 16386;
+        historyHead = 0;
         flip = false;
         A = 0.5;
         B = 0.5;
@@ -311,10 +316,56 @@ class GlitchShifter final : public Effect<T>
             flip = !flip;
             // air, compensates for loss of highs of interpolation
             if (lastwidth != width) {
-                crossesL = 0;
-                realzeroesL = 0;
-                crossesR = 0;
-                realzeroesR = 0;
+                // Lay the buffer out as if it had always run at this width: index
+                // v holds the sample written (gcount - v) mod (width + 1) ago, as
+                // the static wrap leaves it. The read tap keeps its distance, so
+                // the output stays continuous. Zero crosses are moved with their
+                // samples rather than cleared, so the next splice can still find
+                // a seamless join instead of hard-splicing.
+                int lastgcount = gcount;
+                if (gcount > width) {
+                    gcount = width; // the next sample wraps to 0, as it would have
+                }
+                for (int v = 0; v <= width; v++) {
+                    int age = gcount - v;
+                    if (age < 0) {
+                        age += width + 1;
+                    }
+                    int slot = historyHead - 1 - age;
+                    if (slot < 0) {
+                        slot += 65537;
+                    }
+                    pL[v] = pL[65539 + slot];
+                    pR[v] = pR[65539 + slot];
+                }
+                if (gcount < width) { // the mirror of index 0 is newer than index width
+                    pL[width] = pL[0];
+                    pR[width] = pR[0];
+                }
+                pL[width + 1] = pL[1];
+                pR[width + 1] = pR[1];
+                pL[width + 2] = pL[2];
+                pR[width + 2] = pR[2];
+                for (int count = 0; count < 258; count++) {
+                    int age = (lastgcount - offsetL[count]) % (lastwidth + 1);
+                    if (age < 0) {
+                        age += lastwidth + 1;
+                    }
+                    age %= width + 1;
+                    offsetL[count] = gcount - age;
+                    if (offsetL[count] < 0) {
+                        offsetL[count] += width + 1;
+                    }
+                    age = (lastgcount - offsetR[count]) % (lastwidth + 1);
+                    if (age < 0) {
+                        age += lastwidth + 1;
+                    }
+                    age %= width + 1;
+                    offsetR[count] = gcount - age;
+                    if (offsetR[count] < 0) {
+                        offsetR[count] += width + 1;
+                    }
+                }
                 lastwidth = width;
             }
             // global: changing this resets both channels
@@ -347,8 +398,18 @@ class GlitchShifter final : public Effect<T>
             // now we have counts zero, one, two, none of which have sanity checked values
             // we are tracking most recent samples and must SUBTRACT.
             // this is a wrap on the overall buffers, so count, one and two are also common to both channels
-            pL[count + width] = pL[count] = (int)((inputSampleL * 8388352.0) + (double)(lasttempL * feedback));
-            pR[count + width] = pR[count] = (int)((inputSampleR * 8388352.0) + (double)(lasttempR * feedback));
+            pL[count] = (int)((inputSampleL * 8388352.0) + (double)(lasttempL * feedback));
+            pR[count] = (int)((inputSampleR * 8388352.0) + (double)(lasttempR * feedback));
+            if (count < 3) { // the taps read up to two past width: mirror the start
+                pL[count + width] = pL[count];
+                pR[count + width] = pR[count];
+            }
+            pL[65539 + historyHead] = pL[count];
+            pR[65539 + historyHead] = pR[count];
+            historyHead++;
+            if (historyHead > 65536) {
+                historyHead = 0;
+            }
             // double buffer -8388352 to 8388352 is equal to 24 bit linear space
             if ((pL[countone] > 0 && pL[count] < 0) || (pL[countone] < 0 && pL[count] > 0)) // source crossed zero
             {
